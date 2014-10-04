@@ -180,6 +180,7 @@ cache_inode_remove(cache_entry_t *entry, const char *name)
 	}
 
 	/* Update the attributes for the removed entry */
+	to_remove_entry->flags |= CACHE_INODE_UNLINKING;
 	(void)cache_inode_refresh_attrs_locked(to_remove_entry);
 
 	status = status_ref_entry;

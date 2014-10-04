@@ -224,6 +224,8 @@ static const uint32_t CACHE_INODE_TRUST_ATTRS = 0x00000001;
 static const uint32_t CACHE_INODE_TRUST_CONTENT = 0x00000002;
 /** The directory has been populated (negative lookups are meaningful) */
 static const uint32_t CACHE_INODE_DIR_POPULATED = 0x00000004;
+/** This entry is being unlinked, no need to getattt() after unlink */
+static const uint32_t CACHE_INODE_UNLINKING = 0x00000008;
 
 /**
  * @brief The ref counted share reservation state.
@@ -983,6 +985,13 @@ cache_inode_refresh_attrs(cache_entry_t *entry)
 				 acl_status);
 		}
 		entry->obj_handle->attributes.acl = NULL;
+	}
+
+	/* just kill the entry if we're in the unlink path */
+	if (entry->flags & CACHE_INODE_UNLINKING &&
+	    entry->obj_handle->attributes.numlinks == 1) {
+		cache_inode_kill_entry(entry);
+		goto out;
 	}
 
 	fsal_status =
